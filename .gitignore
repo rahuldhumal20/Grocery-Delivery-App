@@ -1,0 +1,17 @@
+# Virtual Environment
+venv/
+.env/
+env/
+__pycache__/
+*.pyc
+
+# Environment Variables (Sensitive data)
+.env
+
+# IDE specific files
+.vscode/
+.idea/
+
+# Database files (if using SQLite)
+*.sqlite3
+*.db
