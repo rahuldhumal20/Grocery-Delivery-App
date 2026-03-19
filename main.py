@@ -1,7 +1,8 @@
 
 #________________Q1 Create basic FastAPI app__________________
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+
 
 app = FastAPI()
 
@@ -33,3 +34,12 @@ def get_items():
         "in_stock_items": in_stock_count,
         "items": items
     }
+#______________________Endpoint items by id____________________
+
+@app.get('/items/{item_id}')
+def get_item(item_id: int):
+    for item in items:
+        if item["id"] == item_id:
+            return item
+        
+    raise HTTPException(status_code=404, detail="Item not found")
