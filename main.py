@@ -10,7 +10,7 @@ app = FastAPI()
 def home():
     return {"message:" "Welcome to FreshMart Grocery"}
 
-#______________________Q2 Items lists _________________________
+#_________________________Q2 Items lists _________________________
 
 items = [
     {"id": 1, "name":"Milk", "price":72, "unit":"litre", "category":"Dairy","in_stock": True},
@@ -21,6 +21,9 @@ items = [
     {"id": 6, "name":"Bread", "price":40, "unit":"piece", "category":"Grain","in_stock": True},
 
 ]
+
+orders = []
+order_counter = 1
 
 #__________________________GET /items____________________________
 
@@ -34,7 +37,31 @@ def get_items():
         "in_stock_items": in_stock_count,
         "items": items
     }
-#______________________Endpoint items by id____________________
+
+#__________________________GET /items/summary ____________________
+
+@app.get('/items/summary')
+def items_summary():
+    total = len(items)
+
+    in_stock = len([i for i in items if i["in_stock"]])
+    out_of_stock = total - in_stock
+
+    category_breakdown = {}
+
+    for item in items:
+        cat = item["category"]
+        category_breakdown[cat] = category_breakdown.get(cat, 0)+1
+
+    return {
+        "total_items": total,
+        "in_stock": in_stock,
+        "out_of_stock": out_of_stock,
+        "category_breakdown": category_breakdown
+    }
+
+
+#__________________________GET items by id____________________
 
 @app.get('/items/{item_id}')
 def get_item(item_id: int):
@@ -43,3 +70,13 @@ def get_item(item_id: int):
             return item
         
     raise HTTPException(status_code=404, detail="Item not found")
+
+#__________________________GET Orders____________________________
+
+@app.get('/orders')
+def get_orders():
+    return{
+        "total_orders": len(orders),
+        "orders": orders
+    }
+
