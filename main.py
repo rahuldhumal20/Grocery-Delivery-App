@@ -35,6 +35,14 @@ class OrderRequest(BaseModel):
     delivery_address: str = Field(min_length=10)
     delivery_slot:str = "Morning"
     bulk_order: bool = False                      # bulk_order
+#________________________NewItem Model_____________________
+
+class NewItem(BaseModel):
+    name: str = Field(min_length=2)
+    price: int = Field(gt=0)
+    unit: str = Field(min_length=2)
+    category: str = Field(min_length=2)
+    in_stock:bool = True
 
 #__________________________Helper Fuctions__________________
 #__________________________find Items______________________
@@ -99,6 +107,30 @@ def get_items():
         "in_stock_items": in_stock_count,
         "items": items
     }
+
+#___________________________POST - Add NewItem ____________________________
+
+@app.post("/items", status_code=status.HTTP_201_CREATED)
+def add_item(item: NewItem):
+
+    for i in items:
+        if i["name"].lower() == item.name.lower():
+            raise HTTPException(status_code=400, detail="Item already exists")
+        
+    new_id = len(items) + 1
+
+    new_item = {
+        "id": new_id,
+        "name": item.name,
+        "price": item.price,
+        "unit": item.unit,
+        "category": item.category,
+        "in_stock": item.in_stock,
+
+    }
+    items.append(new_item)
+
+    return new_item
 
 #__________________________GET /items/summary ____________________
 
