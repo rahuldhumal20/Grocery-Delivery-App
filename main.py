@@ -71,8 +71,8 @@ def calculate_order_total(price, quantity, delivery_slot, bulk_order):
 
 #______________________________________________________________
 
-def filter_items_logic(category, max_price, unit , in_stock):
-    result = items
+def filter_items_logic(category, max_price, unit, in_stock):
+    result = items[:]
 
     if category is not None:
         result = [i for i in result if i["category"] == category]
@@ -84,7 +84,9 @@ def filter_items_logic(category, max_price, unit , in_stock):
         result = [i for i in result if i["unit"] == unit]
 
     if in_stock is not None:
-        result = [i for i in result if i["in_stock"]== in_stock]
+        result = [i for i in result if i["in_stock"] == in_stock]
+
+    return result
 #__________________________GET /items____________________________
 
 @app.get('/items')
@@ -124,7 +126,7 @@ def items_summary():
 @app.get("/items/filter")
 def filter_items(
     category: Optional[str] = None,
-    max_price: Optional[str] = None,
+    max_price: Optional[int] = None,
     unit: Optional[str] = None,
     in_stock: Optional[bool] = None
 ):
@@ -133,15 +135,8 @@ def filter_items(
 
     return{
         "total_found":len(result),
-        "items": items
+        "items": result
     }
-    
-
-
-
-
-
-
 
 
 #__________________________GET items by id____________________
