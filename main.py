@@ -108,29 +108,6 @@ def get_items():
         "items": items
     }
 
-#___________________________POST - Add NewItem ____________________________
-
-@app.post("/items", status_code=status.HTTP_201_CREATED)
-def add_item(item: NewItem):
-
-    for i in items:
-        if i["name"].lower() == item.name.lower():
-            raise HTTPException(status_code=400, detail="Item already exists")
-        
-    new_id = len(items) + 1
-
-    new_item = {
-        "id": new_id,
-        "name": item.name,
-        "price": item.price,
-        "unit": item.unit,
-        "category": item.category,
-        "in_stock": item.in_stock,
-
-    }
-    items.append(new_item)
-
-    return new_item
 
 #__________________________GET /items/summary ____________________
 
@@ -180,6 +157,7 @@ def get_item(item_id: int):
             return item
         
     raise HTTPException(status_code=404, detail="Item not found")
+
 
 #__________________________GET Orders____________________________
 
@@ -231,9 +209,52 @@ def create_order(order: OrderRequest):
 
     return new_order
 
+#___________________________POST - Add NewItem ____________________________
+
+@app.post("/items", status_code=status.HTTP_201_CREATED)
+def add_item(item: NewItem):
+
+    for i in items:
+        if i["name"].lower() == item.name.lower():
+            raise HTTPException(status_code=400, detail="Item already exists")
+        
+    new_id = len(items) + 1
+
+    new_item = {
+        "id": new_id,
+        "name": item.name,
+        "price": item.price,
+        "unit": item.unit,
+        "category": item.category,
+        "in_stock": item.in_stock,
+
+    }
+    items.append(new_item)
+
+    return new_item
 
 
+#_____________________________PUT - Update item______________________
 
+@app.put("/items/{item_id}")
+def update_item(
+    item_id: int,
+    price: Optional[int]= None,
+    in_stock: Optional[bool]= None,
+    
+):
+    item = find_item(item_id)
+
+    if not item:
+        raise HTTPException(status_code=404,detail="Item not Found")
+    
+    if price is not None:
+        item["price"] = price
+
+    if in_stock is not None:
+        item["in_stock"] = in_stock
+
+    return item
 
 
 
