@@ -26,6 +26,8 @@ items = [
 
 orders = []
 order_counter = 1
+
+cart = []
 #______________________Order Request -Pydantic Model______________________
 
 class OrderRequest(BaseModel):
@@ -255,6 +257,81 @@ def update_item(
         item["in_stock"] = in_stock
 
     return item
+
+#_______________________Delete item________________________
+
+@app.delete("/items/{item_id}")
+def delete_item(item_id: int):
+    item = find_item(item_id)
+
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+    for order in orders:
+        if order["item_name"] == item["name"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Item has active orders, cannot delete"
+            )
+        
+    item_name = item["name"]
+        
+    items.remove(item)
+
+    return {
+        "message": "Item deleted successfully",
+        "deleted_item": item_name
+        
+    }
+
+#_______________________________Cart - Post________________________
+
+@app.post("/cart/add")
+def add_to_cart(item_id: int, quantity: int = 1):
+    item = find_item(item_id)
+
+    if not item:
+        raise HTTPException(status_code=404,detail= "Item not found")
+    
+    if not item["in_stock"]:
+        raise HTTPException(status_code=400, detail="Item out of stock")
+    
+    # check if alreay in cart
+
+    for c in cart:
+        if c["item_id"] == item_id:
+            c["quantity"] += quantity
+            c["subtotal"] = c["quantity"] * c["price"]
+            return {"message":"Cart Updated", "cart_item": c}
+
+    # add new item
+       
+    new_cart_item = {
+        "item_id": item_id,
+        "name": item["name"],
+        "price":item["price"],
+        "quantity": quantity,
+        "subtotal": item["price"] * quantity
+    }
+
+    cart.append(new_cart_item)
+
+    return{"message": "Item added to cart" ,"cart_item":new_cart_item}
+
+
+#_________________GET - cart________________________________
+
+@app.get("/cart")
+def view_cart():
+    grand_total= sum(item["subtotal"] for item in cart)
+
+    return {
+        "total_items": len(cart),
+        "grand_total": grand_total,
+        "cart": cart
+    }
+
+    
 
 
 
