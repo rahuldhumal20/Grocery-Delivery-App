@@ -177,6 +177,35 @@ def search_items(keyword: str):
         "total_found": len(result),
         "items": result
     }
+#_____________________________Sort by - price, name, category_________________
+
+@app.get("/items/sort")
+def sort_item(
+    sort_by: str = "price",
+    order:str = "asc"
+):
+    valid_fields = ["price","name","category"]
+
+    if sort_by not in valid_fields:
+        raise HTTPException(
+            status_code=400,
+            detail = f"Invalid order. Use 'asc' or 'desc'"
+        )
+    
+    reverse = True if order == "desc" else False
+
+    sorted_items = sorted(
+        items,
+        key= lambda x: x[sort_by],
+        reverse = reverse      
+    )
+
+    return {
+        "sort_by": sort_by,
+        "order" : order,
+        "total_items": len(sorted_items),
+        "items": sorted_items
+    }
 
 #__________________________GET items by id____________________
 
