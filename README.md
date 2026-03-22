@@ -1,4 +1,4 @@
-# 🛵 FreshMart Grocery Delivery API
+# 🛵 FreshMart-Grocery Delivery APP
 
 A full-featured **FastAPI-based Grocery Delivery Backend System** built as part of a FastAPI Internship Final Project.
 This project simulates a real-world quick-commerce platform like **Blinkit / Zepto**, covering item management, cart workflow, order processing, and advanced APIs.
