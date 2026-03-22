@@ -112,7 +112,7 @@ def get_items():
 
     return {
         "total_items": total,
-        "in_stock_items": in_stock_count,
+        "in_stock_count": in_stock_count,
         "items": items
     }
 
@@ -157,7 +157,7 @@ def filter_items(
 
 #__________________________Search Items by name,category___________________
 
-@app.get("/items/Search")
+@app.get("/items/search")
 def search_items(keyword: str):
     keyword_lower = keyword.lower()
 
@@ -189,7 +189,7 @@ def sort_item(
     if sort_by not in valid_fields:
         raise HTTPException(
             status_code=400,
-            detail = f"Invalid order. Use 'asc' or 'desc'"
+            detail = f"Invalid sort_by. Choose from {valid_fields}"
         )
     
     reverse = True if order == "desc" else False
@@ -265,7 +265,7 @@ def browse_items(
 
     #3. Stock filter 
 
-    if in_stock:
+    if in_stock is not None:
         result = [i for i in result if i["in_stock"] == in_stock ]
 
     #4. Sorting 
@@ -582,7 +582,7 @@ def checkout(request: CheckoutRequest):
     global order_counter
 
     if not cart:
-        raise HTTPException(status_code=404, detail="Cart is empty")
+        raise HTTPException(status_code=400, detail="Cart is empty")
     
     created_orders = []
     grand_total = 0
@@ -616,7 +616,7 @@ def checkout(request: CheckoutRequest):
     cart.clear()
 
     return{
-        "message":"Checkout sucessful",
+        "message":"Checkout successful",
         "total_orders_created": len(created_orders),
         "grand_total": grand_total,
         "orders": created_orders
