@@ -157,7 +157,7 @@ def filter_items(
 
 #__________________________Search Items by name,category___________________
 
-@app.get("/items/{item_id}")
+@app.get("/items/Search")
 def search_items(keyword: str):
     keyword_lower = keyword.lower()
 
