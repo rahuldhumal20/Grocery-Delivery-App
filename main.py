@@ -234,6 +234,81 @@ def paginate_items(page: int= 1 , limit: int = 4):
         "total_pages": total_pages,
         "data": data
     }
+#________________________Browse Items_________________
+
+@app.get("/items/browse")
+def browse_items(
+    keyword: Optional[str]= None,
+    category: Optional[str] =None,
+    in_stock: Optional[bool] = None,
+    sort_by: Optional[str] = None,
+    order: str = "asc",
+    page: int = 1,
+    limit: int = 4
+):
+    result = items[:]
+
+    #1. Keyword Search
+
+    if keyword:
+        keyword_lower = keyword.lower()
+        result = [
+            i for i in result
+            if keyword_lower in i["name"].lower()
+            or keyword_lower in i["category"].lower() 
+        ]
+
+    #2. Category Filter 
+
+    if category:
+        result = [i for i in result if i["category"] == category]
+
+    #3. Stock filter 
+
+    if in_stock:
+        result = [i for i in result if i["in_stock"] == in_stock ]
+
+    #4. Sorting 
+
+    if sort_by:
+        valid_fields = ["price","name","category"]
+
+        if sort_by not in valid_fields:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid sort_by. Choose from {valid_fields}"
+            )
+        
+        if order not in ["asc","desc"]:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid Order"
+            )
+        
+        reverse = True if order == "desc" else False
+
+        result = sorted(result, key=lambda x: x[sort_by], reverse=reverse)
+
+    # 5. Pagination
+
+    total_items = len(result)
+
+    start = (page-1) * limit
+    end = start + limit
+
+    total_pages = (total_items+ limit-1) // limit
+
+    paginated_data = result[start:end]
+
+    return{
+        "total_items": total_items,
+        "total_pages": total_pages,
+        "page": page,
+        "limit": limit,
+        "items": paginated_data
+    }
+
+
 
 #__________________________GET items by id____________________
 
@@ -253,6 +328,79 @@ def get_orders():
     return{
         "total_orders": len(orders),
         "orders": orders
+    }
+#__________________________Orders Search____________________________
+
+@app.get("/orders/search")
+def search_orders(keyword: str):
+    keyword_lower = keyword.lower()
+
+    result = [
+        o for o in orders
+        if keyword_lower in o["customer_name"].lower()
+    ]
+
+    if not result:
+        return {
+            "message": "No orders found",
+            "total_found": 0,
+            "orders": []
+        }
+
+    return {
+        "total_found": len(result),
+        "orders": result
+    }
+#____________________________Orders Sort___________________________
+
+@app.get("/orders/sort")
+def sort_orders(order: str = "asc"):
+
+    if order not in ["asc", "desc"]:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid order. Use 'asc' or 'desc'"
+        )
+
+    reverse = True if order == "desc" else False
+
+    sorted_orders = sorted(
+        orders,
+        key=lambda x: x["total_cost"],
+        reverse=reverse
+    )
+
+    return {
+        "order": order,
+        "total_orders": len(sorted_orders),
+        "orders": sorted_orders
+    }
+#____________________________Orders Paginate________________________
+
+@app.get("/orders/page")
+def paginate_orders(page: int = 1, limit: int = 2):
+
+    total_orders = len(orders)
+
+    if page < 1 or limit < 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Page and limit must be greater than 0"
+        )
+
+    start = (page - 1) * limit
+    end = start + limit
+
+    total_pages = (total_orders + limit - 1) // limit
+
+    data = orders[start:end]
+
+    return {
+        "page": page,
+        "limit": limit,
+        "total_orders": total_orders,
+        "total_pages": total_pages,
+        "orders": data
     }
 
 #_____________________ Endpoint - Post Orders ________________________
