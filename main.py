@@ -45,10 +45,16 @@ class NewItem(BaseModel):
     unit: str = Field(min_length=2)
     category: str = Field(min_length=2)
     in_stock:bool = True
+#______________________Checkout model______________________
+
+class CheckoutRequest(BaseModel):
+    customer_name: str = Field(min_length = 2)
+    delivery_address: str = Field(min_length=10)
+    delivery_slot: str ="Morning"
+
 
 #__________________________Helper Fuctions__________________
 #__________________________find Items______________________
-
 
 def find_item(item_id):
     for item in items:
@@ -79,7 +85,7 @@ def calculate_order_total(price, quantity, delivery_slot, bulk_order):
 
     return original, discounted, total
 
-#______________________________________________________________
+#______________________filter items _________________________
 
 def filter_items_logic(category, max_price, unit, in_stock):
     result = items[:]
@@ -149,6 +155,28 @@ def filter_items(
         "items": result
     }
 
+#__________________________Search Items by name,category___________________
+
+@app.get("/items/{item_id}")
+def search_items(keyword: str):
+    keyword_lower = keyword.lower()
+
+    result = [
+        item for item in items
+        if keyword_lower in item["name"].lower()
+        or keyword_lower in item["category"].lower()
+
+    ]
+    if not result:
+        return{
+            "message": "No items Found",
+            "total_found": 0,
+            "items": []
+        }
+    return {
+        "total_found": len(result),
+        "items": result
+    }
 
 #__________________________GET items by id____________________
 
@@ -284,7 +312,7 @@ def delete_item(item_id: int):
         
     }
 
-#_______________________________Cart - Post________________________
+#_______________________________Cart- Post________________________
 
 @app.post("/cart/add")
 def add_to_cart(item_id: int, quantity: int = 1):
@@ -331,7 +359,66 @@ def view_cart():
         "cart": cart
     }
 
+#_____________________Delete cart item by id__________________
+
+@app.delete("/cart/{item_id}")
+def remove_from_cart(item_id: int):
+    for item in cart:
+        if item["item_id"] == item_id:
+            cart.remove(item)
+            return{"message":f"{item['name']} removed from cart"}
+
+    raise HTTPException(status_code=404, detail= "Item not in cart")
+
+#______________________Cart Checkout_______________________
+
+@app.post("/cart/checkout", status_code=status.HTTP_201_CREATED)
+def checkout(request: CheckoutRequest):
+    global order_counter
+
+    if not cart:
+        raise HTTPException(status_code=404, detail="Cart is empty")
     
+    created_orders = []
+    grand_total = 0
+
+    for c in cart:
+        total_cost = calculate_order_total(
+            c["price"],
+            c["quantity"],
+            request.delivery_slot,
+            False       #bulk not applied here
+        )[2]     
+
+        new_order = {
+            "order_id": order_counter,
+            "customer_name": request.customer_name,
+            "item_name": c["name"],
+            "quantity": c["quantity"],
+            "unit": find_item(c["item_id"])["unit"],
+            "delivery_slot": request.delivery_slot,
+            "delivery_address": request.delivery_address,
+            "total_cost": total_cost,
+            "status": "confirmed"
+        }
+
+        orders.append(new_order)
+        created_orders.append(new_order)
+
+        grand_total += total_cost
+        order_counter += 1
+
+    cart.clear()
+
+    return{
+        "message":"Checkout sucessful",
+        "total_orders_created": len(created_orders),
+        "grand_total": grand_total,
+        "orders": created_orders
+    }
+
+
+
 
 
 
