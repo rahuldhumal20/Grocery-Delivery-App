@@ -206,6 +206,34 @@ def sort_item(
         "total_items": len(sorted_items),
         "items": sorted_items
     }
+#_______________________Pagination - GET items Page____________________________
+
+@app.get("/items/page")
+def paginate_items(page: int= 1 , limit: int = 4):
+
+    total_items = len(items)
+
+    if page < 1 or limit < 1:
+        raise HTTPException(
+            status_code=400,
+            detail ="Page and limit must be greater than 0"
+        )
+    # Pagination Formula 
+
+    start = (page - 1)* limit
+    end = start + limit
+
+    total_pages = (total_items + limit - 1) // limit
+
+    data = items[start:end]
+
+    return{
+        "page": page,
+        "limit": limit,
+        "total_items": total_items,
+        "total_pages": total_pages,
+        "data": data
+    }
 
 #__________________________GET items by id____________________
 
@@ -293,7 +321,7 @@ def add_item(item: NewItem):
     return new_item
 
 
-#_____________________________PUT - Update item______________________
+#__________________________PUT - Update item______________________
 
 @app.put("/items/{item_id}")
 def update_item(
